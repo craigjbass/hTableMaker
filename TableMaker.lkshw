@@ -1,0 +1,10 @@
+Version of workspace file format:
+               1
+Time of storage:
+               "Thu Oct 25 20:43:38 GMT Daylight Time 2012"
+Name of the workspace:
+               "TableMaker"
+File paths of contained packages:
+               ["TableMaker.cabal"]
+Maybe file path of an active package:
+               Just "TableMaker.cabal"
