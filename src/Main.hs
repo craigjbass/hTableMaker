@@ -34,7 +34,7 @@ tableCellStart = "|"
 tableCellEnd   = ""
 
 readElement :: IO String
-readElement = getLine
+readElement = putStrLn "Cell Value or Return:" >> getLine
 
 --Processes elements
 processElements :: ( String  -> String )-> IO [String]
@@ -54,7 +54,7 @@ processNormalElements = processElements normal
 
 --Processes normal rows
 processNormalRows :: IO [[String]]
-processNormalRows = processNormalElements >>=
+processNormalRows = putStrLn "==== [Insert Row] ========\n\n" >> processNormalElements >>=
   \row ->
     if row /= []
     then ( processNormalRows >>= \x -> return ((row):x) )
@@ -86,7 +86,9 @@ normal s = s
 
 --Produces a IO list of strings.
 process :: IO [String]
-process = processHeadings >>=
+process = putStrLn "hTableMaker (Super Hacky)" >>
+                   putStrLn "==== [Setup Headings] ========\n\n" >>
+                   processHeadings >>=
   \x -> ( processNormalRowsFlattened >>= \y -> return  (x ++ y ++ [tableFooter]) )
 
 --Prints a List of strings
