@@ -65,7 +65,7 @@ processNormalRowsFlattened :: IO [String]
 processNormalRowsFlattened = processNormalRows >>= return . helper
     where
        helper :: [[String]] -> [String]
-       helper (x:[]) = x++[tableRowEnd]
+       helper (x:[]) = x
        helper (x:xs) = x++[tableRowEnd]++helper xs
 
 --Processes the headings into an IO list of strings
