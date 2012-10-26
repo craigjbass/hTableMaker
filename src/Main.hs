@@ -15,11 +15,9 @@ module Main (
 ) where
 
 import Control.Monad (unless)
-import Data.List (stripPrefix)
 import System.Exit (exitFailure)
 import Test.QuickCheck.All (quickCheckAll)
-import System.IO
-import Data.Maybe
+import System.IO(putStrLn, getLine)
 
 
 tableHeader = "{| class=\"wikitable\" style=\"text-align: left; color: black;\""
