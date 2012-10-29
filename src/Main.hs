@@ -32,7 +32,18 @@ tableCellStart = "|"
 tableCellEnd   = ""
 
 readElement :: IO String
-readElement = putStrLn "Cell Value or Return:" >> getLine
+readElement = putStrLn "Cell Value or Return:" >> getLine >>= return . wikify
+
+wikify :: String -> String
+wikify [] = []
+wikify (x:[]) = wikifyChar x
+wikify (x:xs) = (wikifyChar x) ++ wikify xs
+ 
+
+wikifyChar :: Char -> String
+wikifyChar c@'|' = "<nowiki>"++[c]++"</nowiki>"
+wikifyChar c@'-' = "<nowiki>"++[c]++"</nowiki>"
+wikifyChar c = [c]
 
 --Processes elements
 processElements :: ( String  -> String )-> IO [String]
