@@ -4,7 +4,7 @@
 -- Module      :  Main
 --
 -- Maintainer  :  Craig Bass <craig@clearbooks.co.uk>
--- Stability   :  UNSTABLE
+-- Stability   :  Mostly-Stable
 --
 -- |
 --
@@ -15,6 +15,7 @@ module Main (
 ) where
 
 import Control.Monad (unless)
+import Data.Maybe
 import System.Exit (exitFailure)
 import Test.QuickCheck.All (quickCheckAll)
 import System.IO(putStrLn, getLine)
@@ -52,13 +53,16 @@ escape :: Char -> String
 escape c = "<nowiki>"++[c]++"</nowiki>"
 
 --Processes elements
-processElements :: ( String  -> String )-> IO [String]
+processElements :: (String  -> String)-> IO [String]
 processElements wrapper = readElement >>= helper wrapper
     where
        helper :: (String -> String) -> String -> IO [String]
-       helper wrapper l@"" = return []
-       helper wrapper l    = processElements wrapper >>= return . \x -> ( ( tableCellStart ++ wrapper l ):x )
-    
+       helper wrapper l@"" = return [] --If no char (return key) do not processElements again
+       helper wrapper l    = processElements wrapper >>= return . formatElement wrapper l --call processElements again to ask for next element
+
+--Formats an element
+formatElement :: (String -> String) -> String -> [String] -> [String]
+formatElement wrapper elem1 elem2 = (tableCellStart ++ wrapper elem1 ++ tableCellEnd):elem2
 
 --Processes heading elements
 processHeadingElements :: IO [String]
@@ -78,21 +82,28 @@ processNormalRows = putStrLn "==== [Insert Row] ========\n\n" >> processNormalEl
 
 --Flattens the normal rows [[String]] into a nice IO [String]
 processNormalRowsFlattened :: IO [String]
-processNormalRowsFlattened = processNormalRows >>= return . helper
+processNormalRowsFlattened = processNormalRows >>= return . \x ->(rowProcessor helper (Just tableRowStart) x)
     where
        helper :: [[String]] -> [String]
        helper [] = []
        helper (x:[]) = x
-       helper (x:xs) = x++[tableRowEnd]++helper xs
-
+       helper (x:(_:[])) = x++[tableRowEnd]
+       helper (x:(u@(_:_))) =  x++[tableRowEnd]++rowProcessor helper (Just tableRowStart) u
+       
 --Processes the headings into an IO list of strings
 processHeadings :: IO [String]
-processHeadings = processHeadingElements >>= return . \x -> tableHeader:helper x
+processHeadings = processHeadingElements >>= return . \x -> tableHeader:(rowProcessor helper (Just tableRowStart) x)
     where
       helper :: [String] -> [String]
       helper [] = []
       helper (x:[]) = [x]++[tableRowEnd]
       helper (x:xs) = x:helper xs
+
+--A one size fits all rowProcessor function
+rowProcessor :: ( [a] -> [String] ) -> Maybe String -> [a] -> [String]
+rowProcessor f (Just []) elems = rowProcessor f Nothing elems
+rowProcessor f (Just x) elems = x:rowProcessor f Nothing elems
+rowProcessor f Nothing elems = f elems
 
 --Wraps a field in bits to make it bold
 bold :: String -> String
@@ -104,7 +115,7 @@ normal s = s
 
 --Produces a IO list of strings.
 process :: IO [String]
-process = putStrLn "hTableMaker (Super Hacky)" >>
+process = putStrLn "hTableMaker (Moderately-Super Hacky)" >>
                    putStrLn "==== [Setup Headings] ========\n\n" >>
                    processHeadings >>=
   \x -> ( processNormalRowsFlattened >>= \y -> return  (x ++ y ++ [tableFooter]) )
