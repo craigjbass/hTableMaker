@@ -31,27 +31,34 @@ tableRowEnd   = "|-"
 tableCellStart = "|"
 tableCellEnd   = ""
 
+--Does the reading of an cell from the user
 readElement :: IO String
 readElement = putStrLn "Cell Value or Return:" >> getLine >>= return . wikify
 
+--Quotes a string into a wiki
 wikify :: String -> String
 wikify [] = []
 wikify (x:[]) = wikifyChar x
 wikify (x:xs) = (wikifyChar x) ++ wikify xs
  
-
+--Wikifys a singular character
 wikifyChar :: Char -> String
-wikifyChar c@'|' = "<nowiki>"++[c]++"</nowiki>"
-wikifyChar c@'-' = "<nowiki>"++[c]++"</nowiki>"
+wikifyChar c@'|' = escape c
+wikifyChar c@'-' = escape c
 wikifyChar c = [c]
+
+--Escapes a char 
+escape :: Char -> String
+escape c = "<nowiki>"++[c]++"</nowiki>"
 
 --Processes elements
 processElements :: ( String  -> String )-> IO [String]
-processElements wrapper = readElement >>=
-  \line ->
-    if line /= ""
-    then ( processElements wrapper >>= \x -> return ((tableCellStart ++ wrapper line):x) )
-    else return []
+processElements wrapper = readElement >>= helper wrapper
+    where
+       helper :: (String -> String) -> String -> IO [String]
+       helper wrapper l@"" = return []
+       helper wrapper l    = processElements wrapper >>= return . \x -> ( ( tableCellStart ++ wrapper l ):x )
+    
 
 --Processes heading elements
 processHeadingElements :: IO [String]
@@ -74,6 +81,7 @@ processNormalRowsFlattened :: IO [String]
 processNormalRowsFlattened = processNormalRows >>= return . helper
     where
        helper :: [[String]] -> [String]
+       helper [] = []
        helper (x:[]) = x
        helper (x:xs) = x++[tableRowEnd]++helper xs
 
@@ -82,6 +90,7 @@ processHeadings :: IO [String]
 processHeadings = processHeadingElements >>= return . \x -> tableHeader:helper x
     where
       helper :: [String] -> [String]
+      helper [] = []
       helper (x:[]) = [x]++[tableRowEnd]
       helper (x:xs) = x:helper xs
 
