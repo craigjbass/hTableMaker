@@ -1,2 +1,0 @@
-TableMaker.exe
-pause
