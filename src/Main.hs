@@ -82,17 +82,17 @@ processNormalRows = putStrLn "==== [Insert Row] ========\n\n" >> processNormalEl
 
 --Flattens the normal rows [[String]] into a nice IO [String]
 processNormalRowsFlattened :: IO [String]
-processNormalRowsFlattened = processNormalRows >>= return . \x ->(rowProcessor helper (Just tableRowStart) x)
+processNormalRowsFlattened = processNormalRows >>= return . \x -> rowProcessor helper $ Just tableRowStart x 
     where
        helper :: [[String]] -> [String]
        helper [] = []
        helper (x:[]) = x
        helper (x:(_:[])) = x++[tableRowEnd]
-       helper (x:(u@(_:_))) =  x++[tableRowEnd]++rowProcessor helper (Just tableRowStart) u
+       helper (x:(u@(_:_))) =  x++[tableRowEnd]++rowProcessor helper $ Just tableRowStart u
        
 --Processes the headings into an IO list of strings
 processHeadings :: IO [String]
-processHeadings = processHeadingElements >>= return . \x -> tableHeader:(rowProcessor helper (Just tableRowStart) x)
+processHeadings = processHeadingElements >>= return . \x -> tableHeader:rowProcessor helper $ Just tableRowStart x
     where
       helper :: [String] -> [String]
       helper [] = []
@@ -118,7 +118,7 @@ process :: IO [String]
 process = putStrLn "hTableMaker (Moderately-Super Hacky)" >>
                    putStrLn "==== [Setup Headings] ========\n\n" >>
                    processHeadings >>=
-  \x -> ( processNormalRowsFlattened >>= \y -> return  (x ++ y ++ [tableFooter]) )
+  \x -> processNormalRowsFlattened >>= \y -> return  $ x ++ y ++ [tableFooter] 
 
 --Prints a List of strings
 printList :: [String] -> IO ()
